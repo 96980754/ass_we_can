@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>提肛</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="stage" class="compact">
+      <section id="panel" class="panel" aria-hidden="true">
+        <header class="panel-head">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div>
+              <h1>提肛</h1>
+              <p id="panel-sub">今日 0 次 · 0 秒</p>
+            </div>
+          </div>
+          <button id="panel-close" class="icon-btn" type="button" aria-label="收起面板">✕</button>
+        </header>
+
+        <div class="panel-body">
+          <div id="reminder-banner" class="banner" hidden>
+            <div class="banner-text">
+              <strong id="banner-title">提醒已开启</strong>
+              <span id="reminder-wait"></span>
+            </div>
+            <div class="banner-actions">
+              <button id="snooze-btn" class="btn ghost" type="button">稍后 5 分钟</button>
+              <button id="pause-btn" class="btn ghost" type="button">暂停提醒</button>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat">
+              <span id="stat-today-count" class="stat-value">0</span>
+              <span class="stat-label">今日次数</span>
+            </div>
+            <div class="stat">
+              <span id="stat-today-time" class="stat-value">0 秒</span>
+              <span class="stat-label">今日时长</span>
+            </div>
+            <div class="stat">
+              <span id="stat-streak" class="stat-value">0</span>
+              <span class="stat-label">连续天数</span>
+            </div>
+            <div class="stat">
+              <span id="stat-all-count" class="stat-value">0</span>
+              <span class="stat-label">累计次数</span>
+            </div>
+          </div>
+
+          <div class="stat-wide">
+            累计时长 <strong id="stat-all-time">0 秒</strong>
+            <span class="sep">·</span>
+            最近一次 <span id="stat-last">还没有记录</span>
+          </div>
+
+          <div class="card">
+            <div class="card-title">近 7 天 <span class="card-sub">次数</span></div>
+            <div id="chart" class="chart"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">历史</div>
+            <div id="history" class="history"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">设置</div>
+
+            <label class="field">
+              <span class="field-label">提醒间隔</span>
+              <span class="field-control">
+                <input id="set-interval" type="number" min="5" max="240" step="5" inputmode="numeric" />
+                <span class="unit">分钟</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">每次训练时长</span>
+              <span class="field-control">
+                <input id="set-target" type="number" min="1" max="60" step="1" inputmode="numeric" />
+                <span class="unit">秒</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">声音提示</span>
+              <span class="field-control">
+                <input id="set-sound" type="checkbox" class="switch" />
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">始终置顶</span>
+              <span class="field-control">
+                <input id="set-ontop" type="checkbox" class="switch" />
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">悬浮球不透明度</span>
+              <span class="field-control">
+                <input id="set-opacity" type="range" min="40" max="100" step="1" />
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">主题</span>
+              <span class="field-control">
+                <select id="set-theme">
+                  <option value="auto">跟随系统</option>
+                  <option value="light">浅色</option>
+                  <option value="dark">深色</option>
+                </select>
+              </span>
+            </label>
+
+            <p class="field-note">
+              按住悬浮球开始计时，松手结束；超过 1 秒的时长都会计入。达到「每次训练时长」时会有完成反馈。
+            </p>
+
+            <div class="actions">
+              <button id="export-btn" class="btn" type="button">导出 CSV</button>
+              <button id="datadir-btn" class="btn" type="button">打开数据目录</button>
+              <button id="reset-btn" class="btn danger" type="button">清空记录</button>
+              <button id="quit-btn" class="btn" type="button">退出应用</button>
+            </div>
+            <p class="status" id="settings-status" role="status"></p>
+          </div>
+
+          <p class="footnote">数据仅保存在本机 · v0.1.0</p>
+        </div>
+      </section>
+
+      <div
+        id="ball"
+        class="ball"
+        data-state="idle"
+        role="button"
+        tabindex="0"
+        aria-label="按住以开始一次提肛训练"
+      >
+        <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="ring-track" cx="50" cy="50" r="45" />
+          <circle id="ring-fill" class="ring-fill" cx="50" cy="50" r="45" />
+        </svg>
+        <div class="ball-core">
+          <span id="ball-main" class="ball-main">提</span>
+          <span id="ball-sub" class="ball-sub">按住</span>
+        </div>
+        <span id="ball-badge" class="ball-badge" title="今日次数">0</span>
+        <span id="ball-alert" class="ball-alert" hidden></span>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
