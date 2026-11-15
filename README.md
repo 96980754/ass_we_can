@@ -19,10 +19,10 @@
 
 ```bash
 # Debian / Ubuntu
-sudo dpkg -i TiGang_0.1.0_amd64.deb
+sudo dpkg -i TiGang_0.1.1_amd64.deb
 
 # 任意发行版（免安装）
-chmod +x TiGang_0.1.0_amd64.AppImage && ./TiGang_0.1.0_amd64.AppImage
+chmod +x TiGang_0.1.1_amd64.AppImage && ./TiGang_0.1.1_amd64.AppImage
 ```
 
 ## 功能
