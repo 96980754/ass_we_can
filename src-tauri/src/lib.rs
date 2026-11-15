@@ -99,6 +99,9 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    // 确保窗口背景完全透明（否则部分平台会渲染出浅色方形底）
+    let _ = win.set_background_color(Some(tauri::window::Color(0, 0, 0, 0)));
+
     let _ = win.show();
 
     // 窗口创建阶段 outer_size 还是 0，等真正映射到屏幕上再定位。
@@ -115,6 +118,15 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     tray::create(app)?;
     reminder::spawn(app.handle().clone());
+
+    // 拖动结束后吸附屏幕边缘
+    {
+        let handle = app.handle().clone();
+        std::thread::spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_millis(140));
+            state::maybe_snap(&handle);
+        });
+    }
 
     if let Some(message) = warning {
         eprintln!("[tigang] {message}");

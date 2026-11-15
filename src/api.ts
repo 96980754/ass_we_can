@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 export interface Settings {
   intervalMinutes: number;
   targetSeconds: number;
+  repsPerSession: number;
+  sessionReps: number;
   minValidMs: number;
   soundEnabled: boolean;
   opacity: number;
@@ -37,6 +39,7 @@ export interface DayHistory {
 
 export interface Snapshot {
   settings: Settings;
+  sessionReps: number;
   today: DayStat;
   allCount: number;
   allMs: number;

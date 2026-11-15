@@ -59,6 +59,8 @@
           <div class="stat-wide">
             累计时长 <strong id="stat-all-time">0 秒</strong>
             <span class="sep">·</span>
+            本组 <strong id="stat-session">0 / 10</strong>
+            <span class="sep">·</span>
             最近一次 <span id="stat-last">还没有记录</span>
           </div>
 
@@ -88,6 +90,14 @@
               <span class="field-control">
                 <input id="set-target" type="number" min="1" max="60" step="1" inputmode="numeric" />
                 <span class="unit">秒</span>
+              </span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">每组次数</span>
+              <span class="field-control">
+                <input id="set-reps" type="number" min="1" max="100" step="1" inputmode="numeric" />
+                <span class="unit">次</span>
               </span>
             </label>
 
@@ -124,7 +134,7 @@
             </label>
 
             <p class="field-note">
-              按住悬浮球开始计时，松手结束；超过 1 秒的时长都会计入。达到「每次训练时长」时会有完成反馈。
+              按住蜜桃开始计时，松手结束并进入 3 秒放松倒计时（再次按住可打断）。超过 1 秒即计入；完成「每组次数」后本组结束，提醒待办才会清除。
             </p>
 
             <div class="actions">
@@ -136,7 +146,7 @@
             <p class="status" id="settings-status" role="status"></p>
           </div>
 
-          <p class="footnote">数据仅保存在本机 · v0.1.1</p>
+          <p class="footnote">数据仅保存在本机 · v0.2.0</p>
         </div>
       </section>
 

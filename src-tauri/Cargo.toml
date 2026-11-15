@@ -1,6 +1,6 @@
 [package]
 name = "tigang"
-version = "0.1.1"
+version = "0.2.0"
 description = "提肛提醒浮窗：按住计时、按时提醒、本地统计"
 authors = ["hmy"]
 edition = "2021"

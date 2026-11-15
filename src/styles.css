@@ -18,6 +18,7 @@
   --ball-bg: rgba(23, 28, 35, 0.68);
   --ball-border: rgba(255, 255, 255, 0.16);
   --peach-ink: #f2efe9;
+  --relax: #8fb8c9;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -38,6 +39,7 @@
     --ball-bg: rgba(255, 255, 255, 0.78);
     --ball-border: rgba(24, 26, 30, 0.1);
     --peach-ink: #23272f;
+    --relax: #5d8797;
     --shadow: 0 24px 60px rgba(15, 40, 32, 0.16), 0 2px 8px rgba(15, 40, 32, 0.08);
   }
 }
@@ -58,6 +60,7 @@
   --ball-bg: rgba(255, 255, 255, 0.78);
   --ball-border: rgba(24, 26, 30, 0.1);
   --peach-ink: #23272f;
+  --relax: #5d8797;
   --shadow: 0 24px 60px rgba(15, 40, 32, 0.16), 0 2px 8px rgba(15, 40, 32, 0.08);
 }
 
@@ -73,7 +76,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent;
+  background: transparent !important;
+  background-color: transparent !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   color: var(--text);
@@ -84,6 +88,7 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
+  background: transparent;
 }
 
 /* ---------- 悬浮球 ---------- */
@@ -161,6 +166,20 @@ body {
 .ball.reached .ring-fill {
   stroke: var(--accent-strong);
   filter: drop-shadow(0 0 6px rgb(var(--accent-glow) / 0.9));
+}
+
+.ball.relaxing .ring-fill {
+  stroke: var(--relax);
+  filter: none;
+}
+
+.ball[data-state="relaxing"] .peach {
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
 }
 
 /* 蜜桃（屁股简笔画）：按住时被「夹住」—— 横向压缩 + 夹紧线稿切换 */

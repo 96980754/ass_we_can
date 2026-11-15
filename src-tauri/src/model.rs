@@ -7,6 +7,7 @@ pub const MIN_VALID_MS: u64 = 1000;
 pub const MAX_REP_MS: u64 = 600_000;
 pub const DEFAULT_INTERVAL_MIN: u32 = 45;
 pub const DEFAULT_TARGET_SEC: u32 = 5;
+pub const DEFAULT_REPS_PER_SESSION: u32 = 10;
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", default)]
@@ -20,8 +21,12 @@ pub struct BallPos {
 pub struct Settings {
     /// 提醒间隔（分钟），5–240，默认 45
     pub interval_minutes: u32,
-    /// 每次训练时长（秒），1–60，默认 5：进度环目标与提醒完成标准
+    /// 每次训练时长（秒），1–60，默认 5：进度环目标
     pub target_seconds: u32,
+    /// 每组训练次数（reps），1–100，默认 10
+    pub reps_per_session: u32,
+    /// 当前组已完成次数（系统状态，随设置持久化）
+    pub session_reps: u32,
     /// 有效阈值：严格大于该值才计入
     pub min_valid_ms: u64,
     pub sound_enabled: bool,
@@ -40,6 +45,8 @@ impl Default for Settings {
         Self {
             interval_minutes: DEFAULT_INTERVAL_MIN,
             target_seconds: DEFAULT_TARGET_SEC,
+            reps_per_session: DEFAULT_REPS_PER_SESSION,
+            session_reps: 0,
             min_valid_ms: MIN_VALID_MS,
             sound_enabled: true,
             opacity: 0.92,
@@ -68,6 +75,7 @@ impl Settings {
 pub struct SettingsPatch {
     pub interval_minutes: Option<u32>,
     pub target_seconds: Option<u32>,
+    pub reps_per_session: Option<u32>,
     pub min_valid_ms: Option<u64>,
     pub sound_enabled: Option<bool>,
     pub opacity: Option<f64>,
@@ -107,6 +115,8 @@ pub struct DayHistory {
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
     pub settings: Settings,
+    /// 当前组已完成次数（便于前端渲染「还差 N 次」）
+    pub session_reps: u32,
     pub today: DayStat,
     pub all_count: u64,
     pub all_ms: u64,

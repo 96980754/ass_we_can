@@ -69,6 +69,19 @@ def main():
         button(display, True)
         time.sleep(0.08)
         button(display, False)
+    elif command == "drag":
+        # 从 (x0,y0) 拖到 (x1,y1)，用于测试拖窗与边缘吸附
+        x0, y0, x1, y1 = (int(v) for v in sys.argv[2:6])
+        move(display, x0, y0)
+        time.sleep(0.2)
+        button(display, True)
+        time.sleep(0.25)
+        steps = 14
+        for i in range(1, steps + 1):
+            move(display, x0 + (x1 - x0) * i // steps, y0 + (y1 - y0) * i // steps)
+            time.sleep(0.035)
+        time.sleep(0.15)
+        button(display, False)
     elif command == "wheel":
         # 向下滚动：按钮 5 按 N 次
         move(display, sys.argv[2], sys.argv[3])

@@ -6,8 +6,10 @@ const TAP_MS = 250;
 const DRAG_PX = 6;
 const MIN_VALID_MS = 1000;
 const RING_CIRCUMFERENCE = 2 * Math.PI * 45;
+/** 松手后的放松倒计时（系统控制） */
+const RELAX_MS = 3000;
 
-type Phase = "idle" | "pending" | "dragging" | "feedback";
+type Phase = "idle" | "pending" | "dragging" | "feedback" | "relaxing";
 
 export interface BallOptions {
   getTargetMs: () => number;
@@ -37,6 +39,8 @@ export class Ball {
   private feedbackTimer = 0;
   private dragWatchdog = 0;
   private targetMs = 5000;
+  private sessionDone = 0;
+  private sessionTarget = 10;
 
   constructor(el: HTMLElement, private readonly opts: BallOptions) {
     this.el = el;
@@ -71,6 +75,32 @@ export class Ball {
     this.targetMs = Math.max(1, seconds) * 1000;
   }
 
+  setSession(done: number, target: number): void {
+    this.sessionDone = Math.max(0, done);
+    this.sessionTarget = Math.max(1, target);
+    if (this.phase === "feedback" || this.phase === "relaxing") {
+      this.hint.textContent = `${Math.min(this.sessionDone, this.sessionTarget)} / ${this.sessionTarget}`;
+      this.hint.hidden = false;
+    }
+  }
+
+  /** 一组完成：庆祝后进入放松 */
+  celebrate(target: number): void {
+    window.clearTimeout(this.feedbackTimer);
+    this.stopFrame();
+    this.phase = "feedback";
+    this.el.classList.remove("rumble", "strong", "shake", "relaxing");
+    void this.el.offsetWidth;
+    this.el.classList.add("success");
+    this.readout.hidden = false;
+    this.readout.textContent = "🎉 完成";
+    this.hint.hidden = false;
+    this.hint.textContent = `${target} / ${target}`;
+    this.ringFill.style.strokeDashoffset = "0";
+    if (this.opts.getSoundEnabled()) playTone("success");
+    this.feedbackTimer = window.setTimeout(() => this.startRelax(), 1600);
+  }
+
   setTodayCount(count: number): void {
     this.badge.textContent = String(count);
   }
@@ -94,12 +124,48 @@ export class Ball {
     this.stopFrame();
     this.locked = false;
     this.reached = false;
-    this.el.classList.remove("rumble", "strong", "shake", "success", "reached");
+    this.el.classList.remove(
+      "rumble",
+      "strong",
+      "shake",
+      "success",
+      "reached",
+      "relaxing"
+    );
     this.readout.hidden = true;
     this.hint.hidden = false;
+    this.hint.textContent = "按住";
     this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
     this.phase = "idle";
     this.el.dataset.state = "idle";
+  }
+
+  /** 松手后的放松阶段：倒计时结束前再次按住可直接打断并开始下一次。 */
+  private startRelax(): void {
+    if (this.phase !== "feedback") return;
+    this.stopFrame();
+    this.phase = "relaxing";
+    this.el.dataset.state = "relaxing";
+    this.el.classList.remove("rumble", "strong", "shake", "success", "reached");
+    this.el.classList.add("relaxing");
+    this.readout.hidden = false;
+    this.hint.hidden = false;
+    this.ringFill.style.strokeDashoffset = "0";
+
+    const until = performance.now() + RELAX_MS;
+    const frame = (): void => {
+      if (this.phase !== "relaxing") return;
+      const remain = until - performance.now();
+      if (remain <= 0) {
+        this.resetVisual();
+        return;
+      }
+      const ratio = remain / RELAX_MS;
+      this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - ratio));
+      this.readout.textContent = `放松 ${(remain / 1000).toFixed(1)}s`;
+      this.raf = requestAnimationFrame(frame);
+    };
+    this.raf = requestAnimationFrame(frame);
   }
 
   private onPointerDown = (e: PointerEvent): void => {
@@ -123,7 +189,13 @@ export class Ball {
     this.el.classList.add("rumble");
     this.readout.hidden = false;
     this.readout.textContent = "0.0s";
-    this.hint.hidden = true;
+    if (this.sessionTarget > 1) {
+      const remaining = Math.max(1, this.sessionTarget - this.sessionDone);
+      this.hint.hidden = false;
+      this.hint.textContent = `还差 ${remaining} 次`;
+    } else {
+      this.hint.hidden = true;
+    }
 
     this.setInRep(true);
     this.beginFrame();
@@ -245,9 +317,14 @@ export class Ball {
     this.el.classList.add("success", "reached");
     this.ringFill.style.strokeDashoffset = "0";
     this.readout.textContent = `✓ ${formatSeconds(duration)}`;
+    this.hint.hidden = false;
+    this.hint.textContent = `${Math.min(
+      this.sessionDone + 1,
+      this.sessionTarget
+    )} / ${this.sessionTarget}`;
     this.opts.onRecord(this.downWall, duration);
 
-    this.feedbackTimer = window.setTimeout(() => this.resetVisual(), 950);
+    this.feedbackTimer = window.setTimeout(() => this.startRelax(), 950);
   }
 
   private invalid(elapsedMs: number): void {
@@ -260,9 +337,11 @@ export class Ball {
     const ms = Math.round(elapsedMs);
     this.readout.textContent =
       ms > TAP_MS ? `✗ ${(ms / 1000).toFixed(1)}s 太短` : "✗ 太短了";
+    this.hint.hidden = false;
+    this.hint.textContent = `${this.sessionDone} / ${this.sessionTarget}`;
     this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
 
-    this.feedbackTimer = window.setTimeout(() => this.resetVisual(), 900);
+    this.feedbackTimer = window.setTimeout(() => this.startRelax(), 900);
   }
 
   private setInRep(value: boolean): void {

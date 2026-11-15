@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TiGang",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "identifier": "com.hmy.tigang",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -22,6 +22,7 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false,
+        "noRedirectionBitmap": true,
         "focus": false,
         "acceptFirstMouse": true,
         "visible": false,

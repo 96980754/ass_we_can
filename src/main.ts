@@ -29,6 +29,7 @@ function apply(s: Snapshot): void {
   );
 
   ball.setTargetSeconds(s.settings.targetSeconds);
+  ball.setSession(s.sessionReps, s.settings.repsPerSession);
   ball.setTodayCount(s.today.count);
   ball.setReminderPending(!s.settings.paused && s.settings.pendingSinceMs != null);
   panel.render(s);
@@ -47,10 +48,14 @@ const ball = new Ball(ballEl, {
     }
   },
   onRecord: (startedAtMs, durationMs) => {
+    const prevDone = snapshot?.sessionReps ?? 0;
+    const target = snapshot?.settings.repsPerSession ?? 10;
     api
       .recordRep(startedAtMs, durationMs)
       .then((s) => {
+        const completed = s.sessionReps === 0 && prevDone + 1 >= target;
         apply(s);
+        if (completed) ball.celebrate(target);
         if (panelOpen) void panel.loadHistory();
       })
       .catch(reportError);

@@ -34,6 +34,7 @@ export class Panel {
 
   private readonly interval = byId<HTMLInputElement>("set-interval");
   private readonly target = byId<HTMLInputElement>("set-target");
+  private readonly reps = byId<HTMLInputElement>("set-reps");
   private readonly sound = byId<HTMLInputElement>("set-sound");
   private readonly onTop = byId<HTMLInputElement>("set-ontop");
   private readonly opacity = byId<HTMLInputElement>("set-opacity");
@@ -48,6 +49,7 @@ export class Panel {
 
     this.interval.addEventListener("change", () => this.patchInterval());
     this.target.addEventListener("change", () => this.patchTarget());
+    this.reps.addEventListener("change", () => this.patchReps());
 
     this.sound.addEventListener("change", () =>
       void this.patch({ soundEnabled: this.sound.checked })
@@ -95,6 +97,7 @@ export class Panel {
     byId("stat-streak").textContent = String(snapshot.streakDays);
     byId("stat-all-count").textContent = String(snapshot.allCount);
     byId("stat-all-time").textContent = formatDuration(snapshot.allMs);
+    byId("stat-session").textContent = `${snapshot.sessionReps} / ${settings.repsPerSession}`;
     byId("stat-last").textContent = snapshot.lastRepMs
       ? `${relativeFromNow(snapshot.lastRepMs, snapshot.nowMs)} · ${formatClock(snapshot.lastRepMs)}`
       : "还没有记录";
@@ -103,6 +106,7 @@ export class Panel {
 
     this.interval.value = String(settings.intervalMinutes);
     this.target.value = String(settings.targetSeconds);
+    this.reps.value = String(settings.repsPerSession);
     this.sound.checked = settings.soundEnabled;
     this.onTop.checked = settings.alwaysOnTop;
     this.opacity.value = String(Math.round(settings.opacity * 100));
@@ -218,6 +222,14 @@ export class Panel {
     const value = Math.min(60, Math.max(1, Math.round(raw)));
     this.target.value = String(value);
     void this.patch({ targetSeconds: value }, `每次训练时长已设为 ${value} 秒`);
+  }
+
+  private patchReps(): void {
+    const raw = Number(this.reps.value);
+    if (!Number.isFinite(raw)) return;
+    const value = Math.min(100, Math.max(1, Math.round(raw)));
+    this.reps.value = String(value);
+    void this.patch({ repsPerSession: value }, `每组次数已设为 ${value} 次`);
   }
 
   private async patch(patch: Partial<Settings>, okMessage = "已保存"): Promise<void> {
