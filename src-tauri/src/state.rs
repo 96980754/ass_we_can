@@ -169,6 +169,15 @@ pub fn update_settings(app: &AppHandle, patch: SettingsPatch) -> Result<Snapshot
         if let Some(v) = patch.always_on_top {
             settings.always_on_top = v;
         }
+        if let Some(v) = patch.breath_notice_seen {
+            settings.breath_notice_seen = v;
+        }
+        if let Some(v) = patch.tutorial_done {
+            settings.tutorial_done = v;
+        }
+        if let Some(v) = patch.pre_check_enabled {
+            settings.pre_check_enabled = v;
+        }
         if let Some(theme) = patch.theme {
             if matches!(theme.as_str(), "auto" | "light" | "dark") {
                 settings.theme = theme;

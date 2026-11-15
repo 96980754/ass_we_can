@@ -5,6 +5,7 @@ import {
 } from "@tauri-apps/plugin-notification";
 import { api, type Snapshot } from "./api";
 import { Ball } from "./ball";
+import { Onboarding } from "./onboarding";
 import { Panel } from "./panel";
 
 const stage = document.getElementById("stage")!;
@@ -35,9 +36,13 @@ function apply(s: Snapshot): void {
   panel.render(s);
 }
 
+const onboarding = new Onboarding();
+
 const ball = new Ball(ballEl, {
   getTargetMs: () => (snapshot?.settings.targetSeconds ?? 5) * 1000,
   getSoundEnabled: () => snapshot?.settings.soundEnabled ?? true,
+  isBlocked: () => onboarding.isOpen,
+  isPreCheckEnabled: () => snapshot?.settings.preCheckEnabled ?? true,
   onTap: () => void togglePanel(),
   onDragStart: async () => {
     try {
@@ -66,11 +71,14 @@ const ball = new Ball(ballEl, {
 const panel = new Panel({
   onClose: () => void togglePanel(false),
   onChanged: (s) => apply(s),
+  onTutorial: () => startTutorial(false),
   onError: reportError,
 });
 
 async function togglePanel(force?: boolean): Promise<void> {
   const next = force ?? !panelOpen;
+  // 首次提示 / 教程未完成时不允许收起面板
+  if (!next && onboarding.isOpen) return;
   if (next === panelOpen || busy) return;
   busy = true;
   try {
@@ -88,6 +96,19 @@ async function togglePanel(force?: boolean): Promise<void> {
   } finally {
     busy = false;
   }
+}
+
+function startTutorial(firstRun: boolean): void {
+  void togglePanel(true);
+  onboarding.showTutorial(async () => {
+    try {
+      const s = await api.updateSettings({ tutorialDone: true });
+      apply(s);
+    } catch (err) {
+      reportError(err);
+    }
+    if (!firstRun) panel.showStatus("教程已结束，可随时在设置里重看");
+  });
 }
 
 async function refresh(): Promise<void> {
@@ -112,6 +133,17 @@ async function ensureNotificationPermission(): Promise<void> {
 
 async function boot(): Promise<void> {
   // 基础防护：本应用不需要浏览器默认的右键菜单与拖拽行为
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const t = e.target as HTMLElement;
+      document.title = `pd:${t?.tagName ?? "?"}#${t?.id ?? ""}@${Math.round(
+        e.clientX
+      )},${Math.round(e.clientY)}`;
+    },
+    true
+  );
+
   window.addEventListener("contextmenu", (e) => e.preventDefault());
   window.addEventListener("dragover", (e) => e.preventDefault());
   window.addEventListener("drop", (e) => e.preventDefault());
@@ -127,6 +159,30 @@ async function boot(): Promise<void> {
     apply(await api.snapshot());
   } catch (err) {
     reportError(err);
+  }
+
+  // 开发热重载 / 异常重载后，窗口尺寸可能与前端状态不一致，先归位为收起态
+  try {
+    await api.setPanelOpen(false);
+  } catch {
+    // 忽略：部分平台不支持程序化调整尺寸
+  }
+  panelOpen = false;
+  stage.classList.add("compact");
+  stage.classList.remove("expanded");
+
+  // 首次启动：强制提示「不要憋气」，随后引导新手教程
+  if (snapshot && !snapshot.settings.breathNoticeSeen) {
+    await togglePanel(true);
+    onboarding.showBreathNotice(async () => {
+      try {
+        const s = await api.updateSettings({ breathNoticeSeen: true });
+        apply(s);
+        if (!s.settings.tutorialDone) startTutorial(true);
+      } catch (err) {
+        reportError(err);
+      }
+    });
   }
 
   await listen("reminder:due", () => {

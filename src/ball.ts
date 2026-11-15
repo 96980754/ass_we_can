@@ -8,12 +8,17 @@ const MIN_VALID_MS = 1000;
 const RING_CIRCUMFERENCE = 2 * Math.PI * 45;
 /** 松手后的放松倒计时（系统控制） */
 const RELAX_MS = 3000;
+/** 每组开始前的代偿自检时长 */
+const PRE_CHECK_MS = 3000;
 
-type Phase = "idle" | "pending" | "dragging" | "feedback" | "relaxing";
+type Phase = "idle" | "checking" | "pending" | "dragging" | "feedback" | "relaxing";
 
 export interface BallOptions {
   getTargetMs: () => number;
   getSoundEnabled: () => boolean;
+  /** 首次提示 / 教程弹窗打开时阻止开始训练 */
+  isBlocked: () => boolean;
+  isPreCheckEnabled: () => boolean;
   onTap: () => void;
   onRecord: (startedAtMs: number, durationMs: number) => void;
   onDragStart: () => void;
@@ -130,7 +135,8 @@ export class Ball {
       "shake",
       "success",
       "reached",
-      "relaxing"
+      "relaxing",
+      "checking"
     );
     this.readout.hidden = true;
     this.hint.hidden = false;
@@ -162,7 +168,7 @@ export class Ball {
       }
       const ratio = remain / RELAX_MS;
       this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - ratio));
-      this.readout.textContent = `放松 ${(remain / 1000).toFixed(1)}s`;
+      this.readout.textContent = `吸气 ${(remain / 1000).toFixed(1)}s`;
       this.raf = requestAnimationFrame(frame);
     };
     this.raf = requestAnimationFrame(frame);
@@ -170,36 +176,75 @@ export class Ball {
 
   private onPointerDown = (e: PointerEvent): void => {
     if (e.button !== 0) return;
+    if (this.opts.isBlocked()) return;
     if (this.phase !== "idle") this.resetVisual();
     window.clearTimeout(this.feedbackTimer);
     window.clearTimeout(this.dragWatchdog);
     primeAudio();
 
+    this.downX = e.clientX;
+    this.downY = e.clientY;
+    this.el.setPointerCapture(e.pointerId);
+    this.el.classList.remove("shake", "success", "reached");
+
+    // 每组第一次训练前，先做 3 秒代偿自检（臀/腹是否放松）
+    if (this.sessionDone === 0 && this.opts.isPreCheckEnabled()) {
+      this.beginCheck();
+    } else {
+      this.beginHold();
+    }
+  };
+
+  /** 3 秒自检：保持按住即自动进入本次收缩，松开则取消。 */
+  private beginCheck(): void {
+    this.stopFrame();
+    this.phase = "checking";
+    this.el.dataset.state = "checking";
+    this.el.classList.add("checking");
+    this.readout.hidden = false;
+    this.readout.textContent = "臀腹放松？";
+    this.hint.hidden = false;
+    this.hint.textContent = "手放小腹 · 别鼓";
+    this.ringFill.style.strokeDashoffset = "0";
+
+    const until = performance.now() + PRE_CHECK_MS;
+    const frame = (): void => {
+      if (this.phase !== "checking") return;
+      const remain = until - performance.now();
+      if (remain <= 0) {
+        this.beginHold();
+        return;
+      }
+      this.ringFill.style.strokeDashoffset = String(
+        RING_CIRCUMFERENCE * (1 - remain / PRE_CHECK_MS)
+      );
+      this.raf = requestAnimationFrame(frame);
+    };
+    this.raf = requestAnimationFrame(frame);
+  }
+
+  private beginHold(): void {
+    this.stopFrame();
     this.phase = "pending";
     this.locked = false;
     this.reached = false;
     this.downPerf = performance.now();
     this.downWall = Date.now();
-    this.downX = e.clientX;
-    this.downY = e.clientY;
 
-    this.el.setPointerCapture(e.pointerId);
+    this.el.classList.remove("checking");
     this.el.dataset.state = "holding";
-    this.el.classList.remove("shake", "success", "reached");
     this.el.classList.add("rumble");
     this.readout.hidden = false;
     this.readout.textContent = "0.0s";
-    if (this.sessionTarget > 1) {
-      const remaining = Math.max(1, this.sessionTarget - this.sessionDone);
-      this.hint.hidden = false;
-      this.hint.textContent = `还差 ${remaining} 次`;
-    } else {
-      this.hint.hidden = true;
-    }
+    this.hint.hidden = false;
+    this.hint.textContent =
+      this.sessionTarget > 1
+        ? `呼气 · 还差 ${Math.max(1, this.sessionTarget - this.sessionDone)} 次`
+        : "呼气";
 
     this.setInRep(true);
     this.beginFrame();
-  };
+  }
 
   private onPointerMove = (e: PointerEvent): void => {
     if (this.phase !== "pending" || this.locked) return;
@@ -221,6 +266,10 @@ export class Ball {
   };
 
   private onPointerUp = (e: PointerEvent): void => {
+    if (this.phase === "checking") {
+      this.resetVisual();
+      return;
+    }
     if (this.phase === "dragging") {
       this.resetVisual();
       return;
@@ -247,6 +296,10 @@ export class Ball {
   };
 
   private onPointerCancel = (): void => {
+    if (this.phase === "checking") {
+      this.resetVisual();
+      return;
+    }
     if (this.phase === "pending" && this.locked) {
       this.succeed(performance.now() - this.downPerf);
       return;
@@ -256,6 +309,10 @@ export class Ball {
   };
 
   private onLostCapture = (): void => {
+    if (this.phase === "checking") {
+      this.resetVisual();
+      return;
+    }
     if (this.phase === "pending" && this.locked) {
       this.succeed(performance.now() - this.downPerf);
       return;
@@ -267,7 +324,9 @@ export class Ball {
   };
 
   private onWindowBlur = (): void => {
-    if (this.phase === "pending" && this.locked) {
+    if (this.phase === "checking") {
+      this.resetVisual();
+    } else if (this.phase === "pending" && this.locked) {
       this.succeed(performance.now() - this.downPerf);
     } else if (this.phase === "pending") {
       this.setInRep(false);

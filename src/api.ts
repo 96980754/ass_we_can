@@ -10,6 +10,9 @@ export interface Settings {
   opacity: number;
   alwaysOnTop: boolean;
   theme: "auto" | "light" | "dark";
+  breathNoticeSeen: boolean;
+  tutorialDone: boolean;
+  preCheckEnabled: boolean;
   paused: boolean;
   nextDueMs: number | null;
   pendingSinceMs: number | null;

@@ -19,6 +19,7 @@
   --ball-border: rgba(255, 255, 255, 0.16);
   --peach-ink: #f2efe9;
   --relax: #8fb8c9;
+  --warn: #fbbf24;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -40,6 +41,7 @@
     --ball-border: rgba(24, 26, 30, 0.1);
     --peach-ink: #23272f;
     --relax: #5d8797;
+    --warn: #a16207;
     --shadow: 0 24px 60px rgba(15, 40, 32, 0.16), 0 2px 8px rgba(15, 40, 32, 0.08);
   }
 }
@@ -61,6 +63,7 @@
   --ball-border: rgba(24, 26, 30, 0.1);
   --peach-ink: #23272f;
   --relax: #5d8797;
+  --warn: #a16207;
   --shadow: 0 24px 60px rgba(15, 40, 32, 0.16), 0 2px 8px rgba(15, 40, 32, 0.08);
 }
 
@@ -173,6 +176,41 @@ body {
   filter: none;
 }
 
+.ball.checking .ring-fill {
+  stroke: var(--relax);
+  filter: none;
+}
+
+/* 呼吸引导环：吸气放大、呼气收缩 */
+.breath-ring {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1);
+  transition: transform 2.8s cubic-bezier(0.37, 0, 0.25, 1),
+    opacity 400ms ease, border-color 300ms ease;
+}
+
+.ball[data-state="checking"] .breath-ring {
+  opacity: 0.6;
+  transform: scale(0.97);
+  border-color: var(--relax);
+}
+
+.ball[data-state="holding"] .breath-ring {
+  opacity: 0.8;
+  transform: scale(0.88);
+}
+
+.ball[data-state="relaxing"] .breath-ring {
+  opacity: 0.95;
+  transform: scale(1.06);
+  border-color: var(--relax);
+}
+
 .ball[data-state="relaxing"] .peach {
   animation: breathe 2.6s ease-in-out infinite;
 }
@@ -217,10 +255,6 @@ body {
   transform: scale(1, 1);
 }
 
-.ball[data-state="holding"] .ball-hint {
-  display: none;
-}
-
 .ball-readout {
   position: absolute;
   left: 50%;
@@ -246,22 +280,29 @@ body {
 
 .ball-hint {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 12%;
-  text-align: center;
-  font-size: 10px;
+  left: 50%;
+  bottom: 15%;
+  transform: translateX(-50%);
+  max-width: 82%;
+  padding: 1.5px 7px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.58);
+  color: #ffffff;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--peach-ink);
-  opacity: 0.55;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.92;
   pointer-events: none;
 }
 
 #stage.expanded .ball-hint {
   font-size: 8px;
-  letter-spacing: 1px;
-  bottom: 7%;
+  letter-spacing: 0.3px;
+  bottom: 5%;
+  padding: 1px 5px;
 }
 
 .ball-badge {
@@ -893,6 +934,111 @@ input[type="range"] {
   opacity: 0.75;
 }
 
+/* ---------- 引导弹窗 ---------- */
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(12, 14, 18, 0.55);
+  animation: fadeIn 150ms ease;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: var(--panel-solid);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.modal-kicker {
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.modal-card h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--text-strong);
+}
+
+.modal-body {
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.modal-body p {
+  margin: 0 0 8px;
+}
+
+.modal-body strong {
+  color: var(--accent);
+}
+
+.modal-warn {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  color: var(--warn);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 弹窗按钮加大命中区域，避免小按钮难以点中 */
+.modal-actions .btn {
+  min-height: 34px;
+  padding: 0 16px;
+  font-size: 12px;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.btn.primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.modal-progress {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 10px;
+  color: var(--muted);
+}
+
 /* ---------- 降低动效 ---------- */
 @media (prefers-reduced-motion: reduce) {
   .ball.rumble,
@@ -906,7 +1052,12 @@ input[type="range"] {
   .ball,
   .peach,
   .peach-fig,
+  .breath-ring,
   .chart-bar {
     transition: none;
+  }
+
+  .modal {
+    animation: none;
   }
 }

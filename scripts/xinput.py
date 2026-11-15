@@ -30,6 +30,16 @@ XTST.XTestFakeButtonEvent.argtypes = [
     ctypes.c_int,
     ctypes.c_ulong,
 ]
+X11.XStringToKeysym.restype = ctypes.c_ulong
+X11.XStringToKeysym.argtypes = [ctypes.c_char_p]
+X11.XKeysymToKeycode.restype = ctypes.c_uint
+X11.XKeysymToKeycode.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+XTST.XTestFakeKeyEvent.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_uint,
+    ctypes.c_int,
+    ctypes.c_ulong,
+]
 
 
 def open_display():
@@ -82,6 +92,12 @@ def main():
             time.sleep(0.035)
         time.sleep(0.15)
         button(display, False)
+    elif command == "key":
+        sym = X11.XStringToKeysym(sys.argv[2].encode())
+        code = X11.XKeysymToKeycode(display, sym)
+        XTST.XTestFakeKeyEvent(display, code, 1, 0)
+        XTST.XTestFakeKeyEvent(display, code, 0, 0)
+        X11.XFlush(display)
     elif command == "wheel":
         # 向下滚动：按钮 5 按 N 次
         move(display, sys.argv[2], sys.argv[3])

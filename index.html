@@ -109,6 +109,13 @@
             </label>
 
             <label class="field">
+              <span class="field-label">训练前自检</span>
+              <span class="field-control">
+                <input id="set-precheck" type="checkbox" class="switch" />
+              </span>
+            </label>
+
+            <label class="field">
               <span class="field-label">始终置顶</span>
               <span class="field-control">
                 <input id="set-ontop" type="checkbox" class="switch" />
@@ -140,6 +147,7 @@
             <div class="actions">
               <button id="export-btn" class="btn" type="button">导出 CSV</button>
               <button id="datadir-btn" class="btn" type="button">打开数据目录</button>
+              <button id="tutorial-btn" class="btn" type="button">新手教程</button>
               <button id="reset-btn" class="btn danger" type="button">清空记录</button>
               <button id="quit-btn" class="btn" type="button">退出应用</button>
             </div>
@@ -150,6 +158,17 @@
         </div>
       </section>
 
+      <div id="modal" class="modal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div class="modal-kicker" id="modal-kicker"></div>
+          <h2 id="modal-title"></h2>
+          <div class="modal-body" id="modal-body"></div>
+          <div class="modal-warn" id="modal-warn" hidden></div>
+          <div class="modal-actions" id="modal-actions"></div>
+          <div class="modal-progress" id="modal-progress"></div>
+        </div>
+      </div>
+
       <div
         id="ball"
         class="ball"
@@ -158,6 +177,7 @@
         tabindex="0"
         aria-label="小蜜桃：按住开始一次提肛训练，松开结束"
       >
+        <div id="breath-ring" class="breath-ring" aria-hidden="true"></div>
         <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
           <circle class="ring-track" cx="50" cy="50" r="45" />
           <circle id="ring-fill" class="ring-fill" cx="50" cy="50" r="45" />

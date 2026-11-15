@@ -34,6 +34,12 @@ pub struct Settings {
     pub opacity: f64,
     pub always_on_top: bool,
     pub theme: String,
+    /// 首次「不要憋气」提示是否已确认
+    pub breath_notice_seen: bool,
+    /// 新手教程是否已完成/跳过
+    pub tutorial_done: bool,
+    /// 每组开始前是否询问「臀腹是否放松」
+    pub pre_check_enabled: bool,
     pub paused: bool,
     pub next_due_ms: Option<i64>,
     pub pending_since_ms: Option<i64>,
@@ -52,6 +58,9 @@ impl Default for Settings {
             opacity: 0.92,
             always_on_top: true,
             theme: "auto".to_string(),
+            breath_notice_seen: false,
+            tutorial_done: false,
+            pre_check_enabled: true,
             paused: false,
             next_due_ms: None,
             pending_since_ms: None,
@@ -81,6 +90,9 @@ pub struct SettingsPatch {
     pub opacity: Option<f64>,
     pub always_on_top: Option<bool>,
     pub theme: Option<String>,
+    pub breath_notice_seen: Option<bool>,
+    pub tutorial_done: Option<bool>,
+    pub pre_check_enabled: Option<bool>,
     pub paused: Option<bool>,
 }
 

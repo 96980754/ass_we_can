@@ -12,6 +12,7 @@ import {
 export interface PanelOptions {
   onClose: () => void;
   onChanged: (snapshot: Snapshot) => void;
+  onTutorial: () => void;
   onError: (error: unknown) => void;
 }
 
@@ -37,6 +38,7 @@ export class Panel {
   private readonly reps = byId<HTMLInputElement>("set-reps");
   private readonly sound = byId<HTMLInputElement>("set-sound");
   private readonly onTop = byId<HTMLInputElement>("set-ontop");
+  private readonly preCheck = byId<HTMLInputElement>("set-precheck");
   private readonly opacity = byId<HTMLInputElement>("set-opacity");
   private readonly theme = byId<HTMLSelectElement>("set-theme");
 
@@ -57,6 +59,10 @@ export class Panel {
     this.onTop.addEventListener("change", () =>
       void this.patch({ alwaysOnTop: this.onTop.checked })
     );
+    this.preCheck.addEventListener("change", () =>
+      void this.patch({ preCheckEnabled: this.preCheck.checked })
+    );
+    byId("tutorial-btn").addEventListener("click", () => this.opts.onTutorial());
     this.theme.addEventListener("change", () =>
       void this.patch({ theme: this.theme.value as Settings["theme"] })
     );
@@ -109,6 +115,7 @@ export class Panel {
     this.reps.value = String(settings.repsPerSession);
     this.sound.checked = settings.soundEnabled;
     this.onTop.checked = settings.alwaysOnTop;
+    this.preCheck.checked = settings.preCheckEnabled;
     this.opacity.value = String(Math.round(settings.opacity * 100));
     this.theme.value = settings.theme;
 
