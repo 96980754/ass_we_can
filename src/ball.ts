@@ -21,8 +21,8 @@ export interface BallOptions {
 export class Ball {
   private readonly el: HTMLElement;
   private readonly ringFill: SVGCircleElement;
-  private readonly main: HTMLElement;
-  private readonly sub: HTMLElement;
+  private readonly readout: HTMLElement;
+  private readonly hint: HTMLElement;
   private readonly badge: HTMLElement;
   private readonly alert: HTMLElement;
 
@@ -41,8 +41,8 @@ export class Ball {
   constructor(el: HTMLElement, private readonly opts: BallOptions) {
     this.el = el;
     this.ringFill = el.querySelector<SVGCircleElement>("#ring-fill")!;
-    this.main = el.querySelector<HTMLElement>("#ball-main")!;
-    this.sub = el.querySelector<HTMLElement>("#ball-sub")!;
+    this.readout = el.querySelector<HTMLElement>("#ball-readout")!;
+    this.hint = el.querySelector<HTMLElement>("#ball-hint")!;
     this.badge = el.querySelector<HTMLElement>("#ball-badge")!;
     this.alert = el.querySelector<HTMLElement>("#ball-alert")!;
 
@@ -95,8 +95,8 @@ export class Ball {
     this.locked = false;
     this.reached = false;
     this.el.classList.remove("rumble", "strong", "shake", "success", "reached");
-    this.main.textContent = "提";
-    this.sub.textContent = "按住";
+    this.readout.hidden = true;
+    this.hint.hidden = false;
     this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
     this.phase = "idle";
     this.el.dataset.state = "idle";
@@ -121,8 +121,9 @@ export class Ball {
     this.el.dataset.state = "holding";
     this.el.classList.remove("shake", "success", "reached");
     this.el.classList.add("rumble");
-    this.main.textContent = "0.0";
-    this.sub.textContent = "秒";
+    this.readout.hidden = false;
+    this.readout.textContent = "0.0s";
+    this.hint.hidden = true;
 
     this.setInRep(true);
     this.beginFrame();
@@ -211,7 +212,7 @@ export class Ball {
       this.ringFill.style.strokeDashoffset = String(
         RING_CIRCUMFERENCE * (1 - progress)
       );
-      this.main.textContent = (elapsed / 1000).toFixed(1);
+      this.readout.textContent = `${(elapsed / 1000).toFixed(1)}s`;
 
       if (!this.locked && elapsed >= MIN_VALID_MS) {
         this.locked = true;
@@ -243,8 +244,7 @@ export class Ball {
     this.el.classList.remove("rumble", "strong");
     this.el.classList.add("success", "reached");
     this.ringFill.style.strokeDashoffset = "0";
-    this.main.textContent = "✓";
-    this.sub.textContent = formatSeconds(duration);
+    this.readout.textContent = `✓ ${formatSeconds(duration)}`;
     this.opts.onRecord(this.downWall, duration);
 
     this.feedbackTimer = window.setTimeout(() => this.resetVisual(), 950);
@@ -257,14 +257,10 @@ export class Ball {
     this.el.classList.remove("rumble", "strong");
     void this.el.offsetWidth;
     this.el.classList.add("shake");
-    this.main.textContent = "✗";
-    this.sub.textContent = "太短了";
-    this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
-
     const ms = Math.round(elapsedMs);
-    if (ms > TAP_MS) {
-      this.sub.textContent = `${(ms / 1000).toFixed(1)}s 太短`;
-    }
+    this.readout.textContent =
+      ms > TAP_MS ? `✗ ${(ms / 1000).toFixed(1)}s 太短` : "✗ 太短了";
+    this.ringFill.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
 
     this.feedbackTimer = window.setTimeout(() => this.resetVisual(), 900);
   }

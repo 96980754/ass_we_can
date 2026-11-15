@@ -11,7 +11,12 @@
       <section id="panel" class="panel" aria-hidden="true">
         <header class="panel-head">
           <div class="brand">
-            <span class="brand-mark" aria-hidden="true"></span>
+            <svg class="brand-mark" viewBox="0 0 128 128" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M64 36C49 22 27 27 19 47 10 69 20 92 40 97 50 100 58 96 64 89 70 96 78 100 88 97 108 92 118 69 109 47 101 27 79 22 64 36Z" />
+                <path d="M64 37C58 48 58 62 62 72" />
+              </g>
+            </svg>
             <div>
               <h1>提肛</h1>
               <p id="panel-sub">今日 0 次 · 0 秒</p>
@@ -131,7 +136,7 @@
             <p class="status" id="settings-status" role="status"></p>
           </div>
 
-          <p class="footnote">数据仅保存在本机 · v0.1.0</p>
+          <p class="footnote">数据仅保存在本机 · v0.1.1</p>
         </div>
       </section>
 
@@ -141,16 +146,40 @@
         data-state="idle"
         role="button"
         tabindex="0"
-        aria-label="按住以开始一次提肛训练"
+        aria-label="小蜜桃：按住开始一次提肛训练，松开结束"
       >
         <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
           <circle class="ring-track" cx="50" cy="50" r="45" />
           <circle id="ring-fill" class="ring-fill" cx="50" cy="50" r="45" />
         </svg>
-        <div class="ball-core">
-          <span id="ball-main" class="ball-main">提</span>
-          <span id="ball-sub" class="ball-sub">按住</span>
-        </div>
+        <svg class="peach" viewBox="0 0 128 128" aria-hidden="true">
+          <g
+            class="peach-fig peach-rest"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M64 36C49 22 27 27 19 47 10 69 20 92 40 97 50 100 58 96 64 89 70 96 78 100 88 97 108 92 118 69 109 47 101 27 79 22 64 36Z" />
+            <path d="M64 37C58 48 58 62 62 72" />
+          </g>
+          <g
+            class="peach-fig peach-clenched"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M64 37C53 25 37 28 29 44 20 63 27 85 43 91 53 95 61 90 64 81 67 90 75 95 85 91 101 85 108 63 99 44 91 28 75 25 64 37Z" />
+            <path d="M64 38C61 47 61 54 64 59 67 65 67 73 64 81" />
+            <path d="M48 66C53 65 57 63 60 60" />
+            <path d="M80 66C75 65 71 63 68 60" />
+          </g>
+        </svg>
+        <span id="ball-readout" class="ball-readout" hidden>0.0s</span>
+        <span id="ball-hint" class="ball-hint">按住</span>
         <span id="ball-badge" class="ball-badge" title="今日次数">0</span>
         <span id="ball-alert" class="ball-alert" hidden></span>
       </div>
